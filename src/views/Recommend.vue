@@ -31,8 +31,10 @@
     methods: {
       async askAI() {
         this.loading = true
+        this.responseRaw = ''
+
         const apiKey = 'sk-ea7e49b61c324dd4b3ce8a41cfea0ea3'
-  
+
         try {
           const res = await fetch('https://api.deepseek.com/chat/completions', {
             method: 'POST',
@@ -46,12 +48,39 @@
                 { role: 'system', content: '你是一个图表推荐专家，帮助用户根据数据分析需求推荐合适的可视化图表。' },
                 { role: 'user', content: this.question }
               ],
-              stream: false
+              stream: true
             })
           })
-  
-          const data = await res.json()
-          this.responseRaw = data.choices?.[0]?.message?.content || '未获得回答'
+
+          const reader = res.body.getReader()
+          const decoder = new TextDecoder('utf-8')
+
+          let result = ''
+          let done = false
+
+          while (!done) {
+            const { value, done: doneReading } = await reader.read()
+            done = doneReading
+            if (value) {
+              const chunk = decoder.decode(value)
+              const lines = chunk.split('\n').filter(line => line.trim().startsWith('data: '))
+              for (const line of lines) {
+                const json = line.replace(/^data: /, '')
+                if (json === '[DONE]') {
+                  done = true
+                  break
+                }
+                try {
+                  const parsed = JSON.parse(json)
+                  const delta = parsed.choices?.[0]?.delta?.content || ''
+                  result += delta
+                  this.responseRaw = result
+                } catch (e) {
+                  console.error('JSON parse error', e)
+                }
+              }
+            }
+          }
         } catch (err) {
           this.responseRaw = '请求出错：' + err.message
         } finally {
