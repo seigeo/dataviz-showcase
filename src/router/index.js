@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import Charts from '../views/Charts.vue'
 import About from '../views/About.vue'
+import Recommend from '../views/Recommend.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: Home },

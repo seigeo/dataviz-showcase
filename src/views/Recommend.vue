@@ -4,27 +4,34 @@
       <textarea v-model="question" placeholder="请输入你的数据分析目标或问题..."></textarea>
       <button @click="askAI">发送</button>
       <div v-if="loading">正在思考中...</div>
-      <div v-if="response">
+      <div v-if="responseRaw">
         <h3>推荐结果：</h3>
-        <p>{{ response }}</p>
+        <div v-html="responseHtml" class="markdown-output"></div>
       </div>
+      <p class="footnote">内容分析由 DeepSeek v3 生成</p>
     </div>
   </template>
   
   <script>
+  import { marked } from 'marked'
   export default {
     name: 'Recommend',
     data() {
       return {
         question: '',
-        response: '',
+        responseRaw: '',
         loading: false
+      }
+    },
+    computed: {
+      responseHtml() {
+        return marked.parse(this.responseRaw)
       }
     },
     methods: {
       async askAI() {
         this.loading = true
-        const apiKey = '在这里填写你的 DeepSeek API Key'
+        const apiKey = 'sk-ea7e49b61c324dd4b3ce8a41cfea0ea3'
   
         try {
           const res = await fetch('https://api.deepseek.com/chat/completions', {
@@ -44,9 +51,9 @@
           })
   
           const data = await res.json()
-          this.response = data.choices?.[0]?.message?.content || '未获得回答'
+          this.responseRaw = data.choices?.[0]?.message?.content || '未获得回答'
         } catch (err) {
-          this.response = '请求出错：' + err.message
+          this.responseRaw = '请求出错：' + err.message
         } finally {
           this.loading = false
         }
@@ -74,5 +81,26 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
+  }
+  .markdown-output {
+    line-height: 1.6;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 6px;
+  }
+  .markdown-output h1, .markdown-output h2 {
+    color: #007acc;
+    margin-top: 1em;
+  }
+  .markdown-output code {
+    background: #eee;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+  .footnote {
+    font-size: 12px;
+    color: #888;
+    margin-top: 10px;
+    text-align: right;
   }
   </style>
