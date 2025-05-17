@@ -4,6 +4,7 @@
       <router-link to="/">首页</router-link>
       <router-link to="/charts">图表演示</router-link>
       <router-link to="/about">关于我们</router-link>
+      <router-link to="/recommend">图表推荐</router-link>
     </nav>
     <router-view />
   </div>
